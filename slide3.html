@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering C++ | University Lecture</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Palette Modern Tech */
+            --bg-deep: #0f172a;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%);
+            
+            --primary: #10b981;      /* Emerald */
+            --primary-glow: rgba(16, 185, 129, 0.4);
+            
+            --secondary: #3b82f6;    /* Blue */
+            --accent: #f59e0b;       /* Amber */
+            --danger: #f43f5e;       /* Rose */
+            --purple: #a855f7;       /* Purple */
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --glass-bg: rgba(30, 41, 59, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background: var(--bg-deep);
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden; 
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0; width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15), transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1), transparent 30%),
+                        radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.1), transparent 30%);
+            z-index: -1;
+            animation: moveBg 30s infinite alternate linear;
+        }
+
+        @keyframes moveBg {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-10%, -10%); }
+        }
+
+        /* Slide Container */
+        .slides-wrapper {
+            /* Kích thước gốc của thiết kế */
+            width: 1280px;
+            height: 720px;
+            position: relative;
+            transform-origin: center center; /* Zoom từ giữa */
+            transition: transform 0.3s ease; /* Mượt mà khi resize */
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            /* Glassmorphism Slide Base */
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            
+            padding: 50px 70px;
+            position: absolute; /* Stack lên nhau */
+            top: 0; left: 0;
+            flex-direction: column;
+            overflow: hidden; /* Cắt phần thừa nếu có */
+            
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+            transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+                        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+        
+        .slide-title { 
+            font-size: 42px; 
+            font-weight: 800; 
+            margin-bottom: 20px; 
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+            flex-shrink: 0; /* Không bị co lại */
+        }
+        
+        .slide-title i { 
+            -webkit-text-fill-color: var(--primary); 
+            font-size: 0.8em;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+        }
+
+        p, li { 
+            font-size: 22px; 
+            line-height: 1.5; 
+            color: var(--text-muted); 
+            margin-bottom: 10px;
+        }
+        strong, b { color: var(--text-main); font-weight: 600; }
+
+        /* Code Block - Mac Style Window */
+        pre { 
+            background: #1e1e2e; /* Catppuccin Mocha-ish */
+            padding: 40px 25px 25px 25px; /* Top padding for window header */
+            border-radius: 12px; 
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #a6accd;
+            margin: 15px 0;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        /* Window Buttons */
+        pre::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #ff5f56;
+            box-shadow: 18px 0 0 #ffbd2e, 36px 0 0 #27c93f;
+        }
+
+        pre::after {
+            content: 'main.cpp';
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: #5c6c7f;
+            font-weight: 600;
+        }
+
+        code { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Syntax Highlighting Sim (Basic) */
+        .kw { color: #c678dd; font-weight: bold; } /* Keyword */
+        .type { color: #e5c07b; } /* Type */
+        .str { color: #98c379; } /* String */
+        .fn { color: #61afef; } /* Function */
+        .num { color: #d19a66; } /* Number */
+        .com { color: #5c6370; font-style: italic; } /* Comment */
+        .prep { color: #E06C75; } /* Preprocessor */
+
+        /* Inline Code */
+        p code, li code {
+            background: rgba(255,255,255,0.1);
+            color: var(--primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* Grid Layouts */
+        .two-col { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 40px; 
+            align-items: start;
+            height: 100%;
+            overflow-y: auto; /* Cho phép cuộn nếu nội dung quá dài */
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        /* Cards */
+        .card { 
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px; /* Reduced padding slightly */
+            border-radius: 16px; 
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card h3 { 
+            color: var(--text-main); 
+            margin-bottom: 8px; 
+            font-size: 20px; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Images */
+        .img-box { 
+            width: 100%; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            background: #1e293b;
+        }
+        .img-box img { width: 100%; height: auto; display: block; }
+
+        /* Decorative Tags */
+        .tag { 
+            display: inline-block; 
+            padding: 6px 16px; 
+            border-radius: 50px; 
+            font-size: 14px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            margin-right: 15px;
+            backdrop-filter: blur(4px);
+        }
+        .tag-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tag-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .btn-nav:hover { background: var(--primary); transform: scale(1.1); border-color: var(--primary); }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0; left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--purple));
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px var(--primary);
+            z-index: 200;
+        }
+
+        /* Staggered Animation for contents */
+        .animate-in > * { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.5s forwards; }
+        .animate-in > *:nth-child(1) { animation-delay: 0.1s; }
+        .animate-in > *:nth-child(2) { animation-delay: 0.2s; }
+        .animate-in > *:nth-child(3) { animation-delay: 0.3s; }
+        .animate-in > *:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Special Chapter Slide */
+        .chapter-slide {
+            background: var(--bg-deep) !important;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 80px rgba(0,0,0,0.5);
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .chapter-number {
+            font-family: 'JetBrains Mono';
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* Memory Block Visualization */
+        .memory-block {
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono';
+            font-size: 14px;
+            color: var(--text-muted);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-animation"></div>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Slide Wrapper -->
+<div class="slides-wrapper" id="slideContainer">
+    
+    <!-- Slide 1: Hero -->
+    <div class="slide active" id="s1" style="justify-content: center; text-align: center;">
+        <div class="animate-in" style="z-index: 2;">
+            <div style="margin-bottom: 30px;">
+                <span class="tag tag-blue">University Level</span>
+                <span class="tag tag-green">CS101 Foundations</span>
+            </div>
+            <h1 style="font-size: 100px; line-height: 1.1; margin-bottom: 20px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; color: transparent;">
+                LẬP TRÌNH <br><span style="color: var(--primary); text-shadow: 0 0 40px rgba(16,185,129,0.4);">C++</span>
+            </h1>
+            <p style="font-size: 28px; max-width: 800px; margin: 0 auto; opacity: 0.8;">
+                Khởi đầu hành trình chinh phục Khoa học Máy tính
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Roadmap Updated (Fixed Layout Overflow) -->
+    <div class="slide" id="s2">
+        <div class="animate-in">
+            <h2 class="slide-title"><i class="fa-solid fa-map-location-dot"></i> LỘ TRÌNH 6 MODULE</h2>
+            <!-- Adjusted Gap and Height to fit -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 500px;">
+                <!-- Col 1 -->
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="card" style="border-left: 4px solid var(--primary);">
+                        <h4 style="color: var(--primary); margin: 0;">01. Tổng quan & Bản chất</h4>
+                        <p style="font-size: 16px; margin: 5px 0 0 0;">Cơ chế biên dịch, IDE, Cấu trúc lệnh.</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--secondary);">
+                        <h4 style="color: var(--secondary); margin: 0;">02. Biến & Kiểu dữ liệu</h4>
+                        <p style="font-size: 16px; margin: 5px 0 0 0;">Stack Memory, Ép kiểu, Kiểu nâng cao.</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--accent);">
+                        <h4 style="color: var(--accent); margin: 0;">03. Luồng điều khiển</h4>
+                        <p style="font-size: 16px; margin: 5px 0 0 0;">Switch Fall-through, Loops & Jumps.</p>
+                    </div>
+                </div>
+                <!-- Col 2 -->
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                     <div class="card" style="border-left: 4px solid var(--purple);">
+                        <h4 style="color: var(--purple); margin: 0;">04. Hàm (Functions)</h4>
+                        <p style="font-size: 16px; margin: 5px 0 0 0;">Overloading, Tham chiếu, Đệ quy.</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--danger);">
+                        <h4 style="color: var(--danger); margin: 0;">05. Mảng & Chuỗi</h4>
+                        <p style="font-size: 16px; margin: 5px 0 0 0;">Bộ nhớ liên tiếp, C-string vs std::string.</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #fff;">
+                        <h4 style="color: #fff; margin: 0;">06. Con trỏ (Pointers)</h4>
+                        <p style="font-size: 16px; margin: 5px 0 0 0;">Cấp phát động, Địa chỉ, Memory Leak.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 1 START -->
+    <div class="slide chapter-slide" id="s3">
+        <div class="animate-in">
+            <span class="chapter-number" style="color: var(--primary);">MODULE 01</span>
+            <h1 style="font-size: 80px; color: white;">TỔNG QUAN & BẢN CHẤT</h1>
+            <div style="width: 80px; height: 4px; background: var(--primary); margin: 20px auto;"></div>
+            <p>Compiler, IDE & Code Structure</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s4">
+        <div class="animate-in">
+            <h2 class="slide-title">BẢN CHẤT QUÁ TRÌNH BIÊN DỊCH</h2>
+            <div class="two-col">
+                <div class="card">
+                    <h3>Quy trình "Biến hình":</h3>
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <strong style="color: var(--primary);">1. Preprocessing (Tiền xử lý):</strong><br>
+                            Xử lý các <code>#include</code>, <code>#define</code>.
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <strong style="color: var(--secondary);">2. Compiling (Biên dịch):</strong><br>
+                            Chuyển mã C++ thành mã máy (Object Code - .obj/.o).
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <strong style="color: var(--accent);">3. Linking (Liên kết):</strong><br>
+                            Gộp các file .obj và thư viện thành file thực thi (.exe).
+                        </div>
+                    </div>
+                </div>
+                <div class="img-box">
+                    <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80" alt="Compiler process" onerror="this.src='https://placehold.co/800x600?text=Compilation+Process'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="s5">
+        <div class="animate-in">
+            <h2 class="slide-title">IDE & CẤU TRÚC LỆNH</h2>
+            <div class="two-col" style="grid-template-columns: 1.5fr 0.5fr;">
+                <pre>
+<span class="prep">#include</span> &lt;iostream&gt; <span class="com">// Directive</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {        <span class="com">// Entry Point</span>
+    <span class="com">// Statement (Câu lệnh)</span>
+    std::cout &lt;&lt; <span class="str">"Hello C++"</span>;
+    
+    <span class="kw">return</span> <span class="num">0</span>;       <span class="com">// Exit code</span>
+}
+                </pre>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="card">
+                        <h3>IDE Khuyên dùng</h3>
+                        <ul>
+                            <li>Visual Studio Code</li>
+                            <li>Visual Studio 2022</li>
+                            <li>CLion (JetBrains)</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="background: rgba(244, 63, 94, 0.1); border-color: var(--danger);">
+                        <h3 style="color: var(--danger);">Lưu ý:</h3>
+                        <p style="font-size: 16px;">Mỗi câu lệnh BẮT BUỘC phải kết thúc bằng dấu chấm phẩy <code>;</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 2 START -->
+    <div class="slide chapter-slide" id="s6">
+        <div class="animate-in">
+            <span class="chapter-number" style="color: var(--secondary);">MODULE 02</span>
+            <h1 style="font-size: 80px; color: white;">BIẾN & KIỂU DỮ LIỆU</h1>
+            <div style="width: 80px; height: 4px; background: var(--secondary); margin: 20px auto;"></div>
+            <p>Stack Memory, Advanced Types & Casting</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s7">
+        <div class="animate-in">
+            <h2 class="slide-title">BỘ NHỚ STACK & BIẾN</h2>
+            <div class="two-col">
+                <div>
+                    <p>Các biến cục bộ (Local variables) được lưu trữ trên <strong>Stack</strong>.</p>
+                    <ul style="font-size: 18px;">
+                        <li><strong>Tốc độ:</strong> Rất nhanh.</li>
+                        <li><strong>Cơ chế:</strong> LIFO (Last In, First Out).</li>
+                        <li><strong>Tự động:</strong> Tự giải phóng khi ra khỏi phạm vi hàm `{ }`.</li>
+                    </ul>
+                    <pre style="margin-top: 20px;">
+{
+    <span class="type">int</span> a = <span class="num">10</span>; <span class="com">// Push vào Stack</span>
+    <span class="type">int</span> b = <span class="num">20</span>; <span class="com">// Push đè lên a</span>
+} 
+<span class="com">// b bị hủy trước, rồi đến a (Pop)</span>
+                    </pre>
+                </div>
+                <div style="padding: 20px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; height: 100%;">
+                    <h3 style="text-align: center; color: var(--secondary);">Stack Visualization</h3>
+                    <div style="display: flex; flex-direction: column-reverse; gap: 5px; height: 80%; justify-content: flex-start;">
+                        <div class="memory-block" style="background: var(--secondary); color: white;"><span>int b</span> <span>Value: 20</span></div>
+                        <div class="memory-block" style="background: var(--primary); color: black;"><span>int a</span> <span>Value: 10</span></div>
+                        <div class="memory-block"><span>...</span> <span>...</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="s8">
+        <div class="animate-in">
+            <h2 class="slide-title">ÉP KIỂU (TYPE CASTING)</h2>
+            <p>Chuyển đổi giá trị từ kiểu dữ liệu này sang kiểu dữ liệu khác.</p>
+            <div class="cards-grid">
+                <div class="card">
+                    <h3 style="color: var(--accent);">Implicit (Ngầm định)</h3>
+                    <p style="font-size: 16px;">Compiler tự động thực hiện, thường là từ kiểu nhỏ sang kiểu lớn.</p>
+                    <pre>
+<span class="type">int</span> x = <span class="num">10</span>;
+<span class="type">double</span> y = x; 
+<span class="com">// y = 10.0</span>
+                    </pre>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--danger);">Explicit (C-Style)</h3>
+                    <p style="font-size: 16px;">Ép kiểu tường minh theo phong cách C cũ.</p>
+                    <pre>
+<span class="type">double</span> pi = <span class="num">3.14</span>;
+<span class="type">int</span> z = (<span class="type">int</span>)pi;
+<span class="com">// z = 3 (mất phần thập phân)</span>
+                    </pre>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--primary);">Static Cast (C++)</h3>
+                    <p style="font-size: 16px;">An toàn hơn, kiểm tra tại thời điểm biên dịch.</p>
+                    <pre>
+<span class="type">double</span> pi = <span class="num">3.14</span>;
+<span class="type">int</span> z = <span class="kw">static_cast</span>&lt;<span class="type">int</span>&gt;(pi);
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 3 START -->
+    <div class="slide chapter-slide" id="s9">
+        <div class="animate-in">
+            <span class="chapter-number" style="color: var(--accent);">MODULE 03</span>
+            <h1 style="font-size: 80px; color: white;">LUỒNG ĐIỀU KHIỂN</h1>
+            <div style="width: 80px; height: 4px; background: var(--accent); margin: 20px auto;"></div>
+            <p>Control Flow, Switch-Case & Jumps</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s10">
+        <div class="animate-in">
+            <h2 class="slide-title">SWITCH & FALL-THROUGH</h2>
+            <div class="two-col">
+                <div>
+                    <p>Dùng <code>switch</code> khi so sánh 1 biến với nhiều giá trị cụ thể.</p>
+                    <div class="card" style="border-color: var(--danger); background: rgba(244, 63, 94, 0.05);">
+                        <h3 style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo Fall-through</h3>
+                        <p style="font-size: 18px;">Nếu QUÊN <code>break</code>, chương trình sẽ tiếp tục chạy xuống các case bên dưới!</p>
+                    </div>
+                </div>
+                <pre>
+<span class="kw">switch</span> (option) {
+    <span class="kw">case</span> <span class="num">1</span>:
+        runGame();
+        <span class="kw">break</span>; <span class="com">// Thoát switch</span>
+    <span class="kw">case</span> <span class="num">2</span>:
+        showInfo();
+        <span class="com">// QUÊN BREAK Ở ĐÂY!</span>
+    <span class="kw">default</span>:
+        exit(); <span class="com">// Case 2 sẽ chạy luôn dòng này</span>
+}
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="s11">
+        <div class="animate-in">
+            <h2 class="slide-title">LOOPS & JUMP STATEMENTS</h2>
+            <div class="cards-grid">
+                <div class="card">
+                    <h3 style="color: var(--primary);">For / While</h3>
+                    <p style="font-size: 16px;">Dùng For khi biết số lần lặp. Dùng While khi lặp theo điều kiện.</p>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--accent);">Break</h3>
+                    <p style="font-size: 16px;">Thoát khỏi vòng lặp NGAY LẬP TỨC.</p>
+                    <pre>
+<span class="kw">if</span> (found) <span class="kw">break</span>;
+                    </pre>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--secondary);">Continue</h3>
+                    <p style="font-size: 16px;">Bỏ qua phần còn lại của lần lặp hiện tại, nhảy sang lần kế tiếp.</p>
+                    <pre>
+<span class="kw">if</span> (i % <span class="num">2</span> == <span class="num">0</span>) <span class="kw">continue</span>;
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 4 START -->
+    <div class="slide chapter-slide" id="s12">
+        <div class="animate-in">
+            <span class="chapter-number" style="color: var(--purple);">MODULE 04</span>
+            <h1 style="font-size: 80px; color: white;">HÀM (FUNCTIONS)</h1>
+            <div style="width: 80px; height: 4px; background: var(--purple); margin: 20px auto;"></div>
+            <p>References, Overloading & Recursion</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s13">
+        <div class="animate-in">
+            <h2 class="slide-title">THAM TRỊ vs THAM CHIẾU</h2>
+            <div class="two-col">
+                <div class="card">
+                    <h3 style="color: var(--text-muted);">Pass by Value (Tham trị)</h3>
+                    <p style="font-size: 16px;">Copy giá trị. Biến gốc KHÔNG đổi.</p>
+                    <pre>
+<span class="type">void</span> inc(<span class="type">int</span> n) {
+    n++; 
+}
+<span class="com">// Gọi inc(x), x vẫn như cũ</span>
+                    </pre>
+                </div>
+                <div class="card" style="border-color: var(--purple);">
+                    <h3 style="color: var(--purple);">Pass by Reference (Tham chiếu)</h3>
+                    <p style="font-size: 16px;">Dùng địa chỉ. Biến gốc THAY ĐỔI.</p>
+                    <pre>
+<span class="type">void</span> inc(<span class="type">int</span> &n) {
+    n++;
+}
+<span class="com">// Gọi inc(x), x tăng lên 1</span>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="s14">
+        <div class="animate-in">
+            <h2 class="slide-title">OVERLOADING & ĐỆ QUY</h2>
+            <div class="two-col">
+                <div class="card">
+                    <h3>Function Overloading</h3>
+                    <p style="font-size: 16px;">Nhiều hàm CÙNG TÊN nhưng KHÁC tham số.</p>
+                    <pre style="font-size: 14px;">
+<span class="type">int</span> add(<span class="type">int</span> a, <span class="type">int</span> b) { ... }
+<span class="type">double</span> add(<span class="type">double</span> a, <span class="type">double</span> b) { ... }
+                    </pre>
+                </div>
+                <div class="card">
+                    <h3>Recursion (Đệ quy)</h3>
+                    <p style="font-size: 16px;">Hàm gọi lại chính nó. Cần điều kiện dừng (Base case).</p>
+                    <pre style="font-size: 14px;">
+<span class="type">int</span> fact(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n <= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> n * fact(n - <span class="num">1</span>);
+}
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 5 START -->
+    <div class="slide chapter-slide" id="s15">
+        <div class="animate-in">
+            <span class="chapter-number" style="color: var(--danger);">MODULE 05</span>
+            <h1 style="font-size: 80px; color: white;">MẢNG & CHUỖI</h1>
+            <div style="width: 80px; height: 4px; background: var(--danger); margin: 20px auto;"></div>
+            <p>Contiguous Memory, C-String vs std::string</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s16">
+        <div class="animate-in">
+            <h2 class="slide-title">MẢNG: BỘ NHỚ LIÊN TIẾP</h2>
+            <p>Các phần tử mảng nằm sát nhau trong RAM. Truy cập cực nhanh qua Index.</p>
+            <div style="margin: 40px 0; display: flex; gap: 5px;">
+                <div class="memory-block" style="flex:1; display:block; text-align:center; padding: 20px; background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger);">
+                    addr: 100<br><strong style="font-size: 24px;">A[0]</strong>
+                </div>
+                <div class="memory-block" style="flex:1; display:block; text-align:center; padding: 20px; background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger);">
+                    addr: 104<br><strong style="font-size: 24px;">A[1]</strong>
+                </div>
+                <div class="memory-block" style="flex:1; display:block; text-align:center; padding: 20px; background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger);">
+                    addr: 108<br><strong style="font-size: 24px;">A[2]</strong>
+                </div>
+                <div class="memory-block" style="flex:1; display:block; text-align:center; padding: 20px; background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger);">
+                    addr: 112<br><strong style="font-size: 24px;">A[3]</strong>
+                </div>
+            </div>
+            <p style="color: var(--danger);"><i class="fa-solid fa-bomb"></i> Lưu ý: Mảng C++ không kiểm tra giới hạn (No Bounds Checking). Truy cập A[100] khi size=4 sẽ gây lỗi hoặc hành vi không xác định.</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s17">
+        <div class="animate-in">
+            <h2 class="slide-title">C-STRING vs STD::STRING</h2>
+            <div class="two-col">
+                <div class="card">
+                    <h3 style="color: var(--text-muted);">C-Style String</h3>
+                    <p style="font-size: 16px;">Mảng ký tự kết thúc bằng <code>\0</code>. Khó dùng, dễ lỗi.</p>
+                    <pre>
+<span class="type">char</span> s[] = <span class="str">"Hello"</span>;
+<span class="com">// Kích thước cố định</span>
+<span class="com">// Phải dùng strcpy, strcat...</span>
+                    </pre>
+                </div>
+                <div class="card" style="border-color: var(--primary);">
+                    <h3 style="color: var(--primary);">std::string (Nên dùng)</h3>
+                    <p style="font-size: 16px;">Lớp đối tượng mạnh mẽ, tự động quản lý bộ nhớ.</p>
+                    <pre>
+<span class="prep">#include</span> &lt;string&gt;
+<span class="type">string</span> s = <span class="str">"Hello"</span>;
+s += <span class="str">" World"</span>; <span class="com">// Nối chuỗi dễ dàng</span>
+<span class="str">cout</span> &lt;&lt; s.length();
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 6 START -->
+    <div class="slide chapter-slide" id="s18">
+        <div class="animate-in">
+            <span class="chapter-number" style="color: #fff;">MODULE 06</span>
+            <h1 style="font-size: 80px; color: white;">CON TRỎ (POINTERS)</h1>
+            <div style="width: 80px; height: 4px; background: #fff; margin: 20px auto;"></div>
+            <p>Memory Addresses, Dynamic Allocation & Leaks</p>
+        </div>
+    </div>
+
+    <div class="slide" id="s19">
+        <div class="animate-in">
+            <h2 class="slide-title">BẢN CHẤT CỦA CON TRỎ</h2>
+            <div class="two-col">
+                <div>
+                    <p>Con trỏ là một biến đặc biệt, giá trị của nó là <strong>ĐỊA CHỈ</strong> của biến khác.</p>
+                    <ul style="margin-top: 20px;">
+                        <li><code>&</code> (Address-of): Lấy địa chỉ của biến.</li>
+                        <li><code>*</code> (Dereference): Truy cập giá trị tại địa chỉ đó.</li>
+                    </ul>
+                    <pre>
+<span class="type">int</span> a = <span class="num">10</span>;
+<span class="type">int</span>* p = &a; <span class="com">// p trỏ tới a</span>
+
+<span class="str">cout</span> &lt;&lt; p;  <span class="com">// In ra 0x7ffd...</span>
+<span class="str">cout</span> &lt;&lt; *p; <span class="com">// In ra 10</span>
+                    </pre>
+                </div>
+                <div class="img-box">
+                     <img src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=800&q=80" alt="Pointers" onerror="this.src='https://placehold.co/800x600?text=Pointer+Map'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="s20">
+        <div class="animate-in">
+            <h2 class="slide-title">CẤP PHÁT ĐỘNG & MEMORY LEAK</h2>
+            <div class="two-col">
+                <div class="card">
+                    <h3 style="color: var(--accent);">Heap Memory</h3>
+                    <p style="font-size: 16px;">Bộ nhớ Heap lớn hơn Stack, sống cho đến khi bị xóa.</p>
+                    <pre>
+<span class="com">// Cấp phát 1 số nguyên trên Heap</span>
+<span class="type">int</span>* p = <span class="kw">new</span> <span class="type">int</span>; 
+*p = <span class="num">100</span>;
+
+<span class="com">// Cấp phát mảng động</span>
+<span class="type">int</span>* arr = <span class="kw">new</span> <span class="type">int</span>[<span class="num">500</span>];
+                    </pre>
+                </div>
+                <div class="card" style="border-color: var(--danger);">
+                    <h3 style="color: var(--danger);">Memory Leak (Rò rỉ)</h3>
+                    <p style="font-size: 16px;">Quên giải phóng bộ nhớ Heap sẽ gây tràn RAM.</p>
+                    <pre>
+<span class="kw">delete</span> p;      <span class="com">// Xóa biến đơn</span>
+<span class="kw">delete</span>[] arr;  <span class="com">// Xóa mảng</span>
+
+<span class="com">// Quan trọng: p = nullptr sau khi xóa</span>
+p = <span class="kw">nullptr</span>;
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary & End -->
+    <div class="slide" id="s21" style="justify-content: center; text-align: center;">
+        <div class="animate-in">
+            <h1 style="font-size: 100px; color: var(--primary);">KẾT THÚC</h1>
+            <p style="font-size: 28px;">"Talk is cheap. Show me the code." - Linus Torvalds</p>
+            <div style="margin-top: 50px; display: flex; justify-content: center; gap: 30px;">
+                <div class="card" style="width: 200px;">
+                    <i class="fa-solid fa-code" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
+                    <p style="font-size: 16px; margin: 0;">Practice Daily</p>
+                </div>
+                <div class="card" style="width: 200px;">
+                    <i class="fa-solid fa-bug" style="font-size: 40px; color: var(--danger); margin-bottom: 15px;"></i>
+                    <p style="font-size: 16px; margin: 0;">Debug Often</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Navigation Controls -->
+<div class="controls">
+    <button class="btn-nav" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="btn-nav" onclick="nextSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<script>
+    let currentSlide = 1;
+    const totalSlides = 21; 
+
+    // Auto-scale Logic
+    function resizeSlides() {
+        const container = document.getElementById('slideContainer');
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        const scaleX = windowWidth / 1280;
+        const scaleY = windowHeight / 720;
+        
+        // Scale theo chiều nhỏ hơn để giữ tỉ lệ 16:9 mà không bị cắt
+        const scale = Math.min(scaleX, scaleY) * 0.95; // 0.95 để chừa chút lề
+        
+        container.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', resizeSlides);
+    // Gọi ngay khi load
+    window.onload = () => {
+        resizeSlides();
+        updateSlide(); // Khởi tạo slide đầu tiên
+    };
+
+    function updateSlide() {
+        document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+        
+        const activeSlide = document.getElementById('s' + currentSlide);
+        if(activeSlide) {
+            activeSlide.classList.add('active');
+            
+            // Re-trigger animation
+            const animatedContent = activeSlide.querySelector('.animate-in');
+            if(animatedContent) {
+                animatedContent.style.display = 'none';
+                activeSlide.offsetHeight; 
+                animatedContent.style.display = 'block';
+            }
+        }
+
+        document.getElementById('progressBar').style.width = (currentSlide / totalSlides * 100) + '%';
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides) {
+            currentSlide++;
+            updateSlide();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlide > 1) {
+            currentSlide--;
+            updateSlide();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+</script>
+
+</body>
+</html>
